@@ -63,7 +63,15 @@ module soc_top(
     output          md_t_0,
     output          phy_rstn,
     
-    output [2:0]    led
+    output [2:0]    led,
+    
+    input  [3:0]    sd_dat_i,
+    output [3:0]    sd_dat_o,
+    output          sd_dat_t,
+    input           sd_cmd_i,
+    output          sd_cmd_o,
+    output          sd_cmd_t,
+    output          sd_clk
 );
 
 `define AXI_LINE(name) AXI_BUS #(.AXI_ADDR_WIDTH(32), .AXI_DATA_WIDTH(32), .AXI_ID_WIDTH(4)) name()
@@ -82,6 +90,7 @@ assign sdc_dma_m.b_ready = 0;
 `AXI_LINE(spi_s);
 `AXI_LINE(eth_s);
 `AXI_LINE(intc_s);
+`AXI_LINE(sdc_s);
 
 `AXI_LINE_W(mig_s, 5);
 `AXI_LINE(apb_s);
@@ -97,13 +106,14 @@ wire spi_interrupt;
 wire eth_interrupt;
 wire uart_interrupt;
 wire cpu_interrupt;
+wire sd_dat_interrupt, sd_cmd_interrupt;
 // Ethernet should be at lowest bit because the configuration in intc
 // (interrupt of emaclite is a pulse interrupt, not level) 
-wire [2:0] interrupts = {uart_interrupt, spi_interrupt, eth_interrupt};
+wire [4:0] interrupts = {sd_dat_interrupt, sd_cmd_interrupt, uart_interrupt, spi_interrupt, eth_interrupt};
 cpu_wrapper cpu(.cpu_clk(cpu_clk), .m0_clk(soc_clk), .m0_aresetn(aresetn), .interrupt(cpu_interrupt), .m0(cpu_m));
 
-function logic [2:0] periph_addr_sel(input logic [ 31 : 0 ] addr);
-    automatic logic [2:0] select;
+function logic [3:0] periph_addr_sel(input logic [ 31 : 0 ] addr);
+    automatic logic [3:0] select;
     if (addr[31:27] == 5'b0) // MIG
         select = 1;
     else if (addr[31:20]==12'h1fc || addr[31:16]==16'h1fe8) // SPI
@@ -118,6 +128,8 @@ function logic [2:0] periph_addr_sel(input logic [ 31 : 0 ] addr);
         select = 6;
     else if (addr[31:20]==12'h1fa) // USB Controller
         select = 7;
+    else if (addr[31:16]==16'h1fe1) // SD Controller
+        select = 8;
     else // ERROR
         select = 0;
     return select;
@@ -127,7 +139,7 @@ axi_demux_intf #(
     .AXI_ID_WIDTH(4),
     .AXI_ADDR_WIDTH(32),
     .AXI_DATA_WIDTH(32),
-    .NO_MST_PORTS(8),
+    .NO_MST_PORTS(9),
     .MAX_TRANS(2),
     .AXI_LOOK_BITS(2),
     .FALL_THROUGH(1)
@@ -138,8 +150,8 @@ axi_demux_intf #(
     .slv_aw_select_i(periph_addr_sel(cpu_m.aw_addr)),
     .slv_ar_select_i(periph_addr_sel(cpu_m.ar_addr)),
     .slv(cpu_m),
-    //      7      6        5      4      3     2      1       0
-    .mst({usb_s, intc_s, spi_s, eth_s, apb_s, cfg_s, mem_m, err_s})
+    //      8      7      6        5      4      3     2      1       0
+    .mst({sdc_s, usb_s, intc_s, spi_s, eth_s, apb_s, cfg_s, mem_m, err_s})
 );
 
 axi_mux_intf #(
@@ -192,6 +204,23 @@ ethernet_wrapper ethernet(
     .phy_rstn     (phy_rstn )
 );
 
+sdc_wrapper sdc(
+    .aclk(soc_clk),
+    .aresetn(aresetn),
+    
+    .slv(sdc_s),
+    .dma_mst(sdc_dma_m),
+    .int_cmd(sd_cmd_interrupt),
+    .int_data(sd_dat_interrupt),
+    
+    .sd_dat_i(sd_dat_i),
+    .sd_dat_o(sd_dat_o),
+    .sd_dat_t(sd_dat_t),
+    .sd_cmd_i(sd_cmd_i),
+    .sd_cmd_o(sd_cmd_o),
+    .sd_cmd_t(sd_cmd_t),
+    .sd_clk(sd_clk)
+);
 
 //confreg
 confreg CONFREG(
