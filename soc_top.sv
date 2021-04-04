@@ -47,10 +47,24 @@ module soc_top(
     output        uart_txd_en,
     input         uart_rxd_i,
     output        uart_rxd_o,
-    output        uart_rxd_en
+    output        uart_rxd_en,
+    
+    input           rmii_ref_clk,  
+    output  [1:0]   rmii_txd,    
+    output          rmii_tx_en,   
+
+    input   [1:0]   rmii_rxd,    
+    input           rmii_crs_rxdv,   
+    input           rmii_rx_err,
+    
+    input           md_i_0,      
+    output          mdc_0,
+    output          md_o_0,
+    output          md_t_0,
+    output          phy_rstn,
+    
+    output [2:0]    led
 );
-
-
 
 `define AXI_LINE(name) AXI_BUS #(.AXI_ADDR_WIDTH(32), .AXI_DATA_WIDTH(32), .AXI_ID_WIDTH(4)) name()
 `define AXI_LITE_LINE(name) AXI_LITE #(.AXI_ADDR_WIDTH(32), .AXI_DATA_WIDTH(32)) name()
@@ -67,15 +81,11 @@ assign sdc_dma_m.b_ready = 0;
 
 `AXI_LINE(spi_s);
 `AXI_LINE(eth_s);
-error_slave_wrapper err_slave_eth(soc_clk, aresetn, eth_s);
-
 `AXI_LINE(intc_s);
-error_slave_wrapper err_slave_intc(soc_clk, aresetn, intc_s);
 
 `AXI_LINE_W(mig_s, 5);
 `AXI_LINE(apb_s);
 `AXI_LINE(cfg_s);
-error_slave_wrapper err_slave_cfg(soc_clk, aresetn, cfg_s);
 
 `AXI_LINE(err_s);
 error_slave_wrapper err_slave_err(soc_clk, aresetn, err_s);
@@ -83,9 +93,13 @@ error_slave_wrapper err_slave_err(soc_clk, aresetn, err_s);
 `AXI_LINE(usb_s);
 error_slave_wrapper err_slave_usb(soc_clk, aresetn, usb_s);
 
-
-wire cpu_interrupt = 0;
-wire [7:0] interrupts;
+wire spi_interrupt;
+wire eth_interrupt;
+wire uart_interrupt;
+wire cpu_interrupt;
+// Ethernet should be at lowest bit because the configuration in intc
+// (interrupt of emaclite is a pulse interrupt, not level) 
+wire [2:0] interrupts = {uart_interrupt, spi_interrupt, eth_interrupt};
 cpu_wrapper cpu(.cpu_clk(cpu_clk), .m0_clk(soc_clk), .m0_aresetn(aresetn), .interrupt(cpu_interrupt), .m0(cpu_m));
 
 function logic [2:0] periph_addr_sel(input logic [ 31 : 0 ] addr);
@@ -144,6 +158,88 @@ axi_mux_intf #(
     .mst(mig_s)
 );
 
+axi_intc_wrapper #(
+    .C_NUM_INTR_INPUTS($bits(interrupts))
+) intc (
+    .aslv(intc_s),
+    .aclk(soc_clk),
+    .aresetn(aresetn),
+    .irq_i(interrupts),
+    .irq_o(cpu_interrupt)
+);
+
+//eth top
+ethernet_wrapper ethernet(
+    .aclk        (soc_clk  ),
+    .aresetn     (aresetn  ),      
+    .slv         (eth_s    ),
+
+    .interrupt_0 (eth_interrupt),
+ 
+    .rmii_ref_clk (rmii_ref_clk   ),
+    .rmii_txd     (rmii_txd       ),    
+    .rmii_tx_en   (rmii_tx_en     ),   
+
+    .rmii_rxd     (rmii_rxd       ),    
+    .rmii_crs_rxdv(rmii_crs_rxdv  ),   
+    .rmii_rx_err  (rmii_rx_err    ),  
+
+    // MDIO
+    .mdc_0        (mdc_0    ),
+    .md_i_0       (md_i_0   ),
+    .md_o_0       (md_o_0   ),       
+    .md_t_0       (md_t_0   ),
+    .phy_rstn     (phy_rstn )
+);
+
+
+//confreg
+confreg CONFREG(
+    .aclk           (soc_clk            ),       
+    .aresetn        (aresetn            ),       
+    .s_awid         (cfg_s.aw_id        ),
+    .s_awaddr       (cfg_s.aw_addr      ),
+    .s_awlen        (cfg_s.aw_len[3:0]       ),
+    .s_awsize       (cfg_s.aw_size      ),
+    .s_awburst      (cfg_s.aw_burst     ),
+    .s_awlock       ('0                 ),
+    .s_awcache      ('0                 ),
+    .s_awprot       ('0                 ),
+    .s_awvalid      (cfg_s.aw_valid     ),
+    .s_awready      (cfg_s.aw_ready     ),
+    .s_wready       (cfg_s.w_ready      ),
+    .s_wdata        (cfg_s.w_data       ),
+    .s_wstrb        (cfg_s.w_strb       ),
+    .s_wlast        (cfg_s.w_last       ),
+    .s_wvalid       (cfg_s.w_valid      ),
+    .s_bid          (cfg_s.b_id         ),
+    .s_bresp        (cfg_s.b_resp       ),
+    .s_bvalid       (cfg_s.b_valid      ),
+    .s_bready       (cfg_s.b_ready      ),
+    .s_arid         (cfg_s.ar_id        ),
+    .s_araddr       (cfg_s.ar_addr      ),
+    .s_arlen        (cfg_s.ar_len[3:0]       ),
+    .s_arsize       (cfg_s.ar_size      ),
+    .s_arburst      (cfg_s.ar_burst     ),
+    .s_arlock       ('0                 ),
+    .s_arcache      ('0                 ),
+    .s_arprot       ('0                 ),
+    .s_arvalid      (cfg_s.ar_valid     ),
+    .s_arready      (cfg_s.ar_ready     ),
+    .s_rready       (cfg_s.r_ready      ),
+    .s_rid          (cfg_s.r_id         ),
+    .s_rdata        (cfg_s.r_data       ),
+    .s_rresp        (cfg_s.r_resp       ),
+    .s_rlast        (cfg_s.r_last       ),
+    .s_rvalid       (cfg_s.r_valid      ),
+    
+    .order_addr_reg    (        ),
+    .write_dma_end     (0       ),
+    .finish_read_order (0       ),
+
+    .led            (led)
+);
+
 spi_flash_ctrl SPI (                                         
     .aclk           (soc_clk            ),       
     .aresetn        (aresetn            ),       
@@ -195,7 +291,7 @@ spi_flash_ctrl SPI (
     .sdi_i          (sdi_i         ),
     .sdi_o          (sdi_o         ),
     .sdi_en         (sdi_en        ),
-    .inta_o         (interrupts[1]     )
+    .inta_o         (spi_interrupt )
 );
 
 axi2apb_misc APB_DEV 
@@ -252,7 +348,7 @@ axi2apb_misc APB_DEV
 .uart0_dsr_i        (0      ),
 .uart0_dcd_i        (0      ),
 .uart0_ri_i         (0      ),
-.uart0_int          (interrupts[2])
+.uart0_int          (uart_interrupt)
 );
 
     assign mem_axi_awid = mig_s.aw_id;
