@@ -79,7 +79,8 @@ sdc_controller inst
 
   // WISHBONE master
   .m_wb_adr_o(m_wb_adr), .m_wb_sel_o(m_wb_sel), .m_wb_we_o(m_wb_we),
-  .m_wb_dat_o(m_wb_dat_o), .m_wb_dat_i(m_wb_dat_i),
+  .m_wb_dat_o({m_wb_dat_o[7:0], m_wb_dat_o[15:8], m_wb_dat_o[23:16], m_wb_dat_o[31:24]}),
+  .m_wb_dat_i({m_wb_dat_i[7:0], m_wb_dat_i[15:8], m_wb_dat_i[23:16], m_wb_dat_i[31:24]}),
   .m_wb_cyc_o(m_wb_cyc), .m_wb_stb_o(m_wb_stb), .m_wb_ack_i(m_wb_ack),
   
   .sd_cmd_dat_i(sd_cmd_i), 
