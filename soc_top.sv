@@ -80,11 +80,6 @@ module soc_top(
 
 `AXI_LINE(cpu_m);
 `AXI_LINE(sdc_dma_m);
-assign sdc_dma_m.ar_valid = 0;
-assign sdc_dma_m.aw_valid = 0;
-assign sdc_dma_m.r_ready = 0;
-assign sdc_dma_m.w_valid = 0;
-assign sdc_dma_m.b_ready = 0;
 `AXI_LINE(mem_m);
 
 `AXI_LINE(spi_s);

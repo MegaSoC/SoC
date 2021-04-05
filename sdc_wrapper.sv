@@ -17,6 +17,7 @@ module sdc_wrapper (
     AXI_BUS.Master  dma_mst
 );
 
+// WISHBONE pipeline slave
 wire   [31:0]  sp_wb_dat_i;     // WISHBONE data input
 wire   [31:0]  sp_wb_dat_o;     // WISHBONE data output
 wire           sp_wb_err;     // WISHBONE error output
@@ -31,7 +32,6 @@ wire           sp_wb_stall;     // WISHBONE acknowledge output
 // WISHBONE slave
 wire   [31:0]  s_wb_dat_i;     // WISHBONE data input
 wire   [31:0]  s_wb_dat_o;     // WISHBONE data output
-wire           s_wb_err;     // WISHBONE error output
 wire   [31:2]  s_wb_adr;     // WISHBONE address input
 wire    [3:0]  s_wb_sel;     // WISHBONE byte select input
 wire           s_wb_we;      // WISHBONE write enable input
@@ -40,16 +40,17 @@ wire           s_wb_stb;     // WISHBONE strobe input
 wire           s_wb_ack;     // WISHBONE acknowledge output
 
 // WISHBONE master
-(*mark_debug="true"*)wire  [31:2]  m_wb_adr;
-(*mark_debug="true"*)wire   [3:0]  m_wb_sel;
-(*mark_debug="true"*)wire          m_wb_we;
-(*mark_debug="true"*)wire  [31:0]  m_wb_dat_i;
-(*mark_debug="true"*)wire  [31:0]  m_wb_dat_o;
-(*mark_debug="true"*)wire          m_wb_cyc;
-(*mark_debug="true"*)wire          m_wb_stb;
-(*mark_debug="true"*)wire          m_wb_ack;
-(*mark_debug="true"*)wire          m_wb_err;
+wire  [31:0]  m_wb_adr;
+wire   [3:0]  m_wb_sel;
+wire          m_wb_we;
+wire  [31:0]  m_wb_dat_i;
+wire  [31:0]  m_wb_dat_o;
+wire          m_wb_cyc;
+wire          m_wb_stb;
+wire          m_wb_ack;
+wire          m_wb_err;
 
+// WISHBONE pipeline master
 wire  [31:2]  mp_wb_adr;
 wire   [3:0]  mp_wb_sel;
 wire          mp_wb_we;
@@ -62,7 +63,7 @@ wire          mp_wb_err;
 wire          mp_wb_stall;
 
 wire sd_cmd_oe, sd_dat_oe;
-assign sd_cmt_t = ~sd_cmd_oe;
+assign sd_cmd_t = ~sd_cmd_oe;
 assign sd_dat_t = ~sd_dat_oe;
 
 sdc_controller inst
@@ -72,16 +73,14 @@ sdc_controller inst
   
   // WISHBONE slave
   .wb_dat_i(s_wb_dat_i), .wb_dat_o(s_wb_dat_o), 
-  .wb_adr_i(s_wb_adr[11:2]), .wb_sel_i(s_wb_sel), 
+  .wb_adr_i({s_wb_adr[7:2], 2'b0}), .wb_sel_i(s_wb_sel), 
   .wb_we_i(s_wb_we), .wb_cyc_i(s_wb_cyc), 
-  .wb_stb_i(s_wb_stb), .wb_ack_o(s_wb_ack), .wb_err_o(s_wb_err), 
+  .wb_stb_i(s_wb_stb), .wb_ack_o(s_wb_ack),
 
   // WISHBONE master
-  .m_wb_adr_o(m_wb_adr), .m_wb_sel_o(m_wb_sel), .m_wb_we_o(m_wb_we), 
-  // .m_wb_dat_o({m_wb_dat_o[7:0], m_wb_dat_o[15:8], m_wb_dat_o[23:16], m_wb_dat_o[31:24]}),
-  // .m_wb_dat_i({m_wb_dat_i[7:0], m_wb_dat_i[15:8], m_wb_dat_i[23:16], m_wb_dat_i[31:24]}),
+  .m_wb_adr_o(m_wb_adr), .m_wb_sel_o(m_wb_sel), .m_wb_we_o(m_wb_we),
   .m_wb_dat_o(m_wb_dat_o), .m_wb_dat_i(m_wb_dat_i),
-  .m_wb_cyc_o(m_wb_cyc), .m_wb_stb_o(m_wb_stb), .m_wb_ack_i(m_wb_ack), .m_wb_err_i(m_wb_err), 
+  .m_wb_cyc_o(m_wb_cyc), .m_wb_stb_o(m_wb_stb), .m_wb_ack_i(m_wb_ack),
   
   .sd_cmd_dat_i(sd_cmd_i), 
   .sd_cmd_out_o(sd_cmd_o), 
@@ -165,8 +164,9 @@ wbp2classic #(.AW(30)) wp2wc (
     .o_msel(s_wb_sel),
     .i_mack(s_wb_ack),
     .i_mdata(s_wb_dat_o),
-    .i_merr(s_wb_err)
+    .i_merr(1'b0)
 );
+
 
 wbc2pipeline #(.AW(30)) wc2wp(
     .i_clk(aclk), .i_reset(~aresetn),
@@ -174,7 +174,7 @@ wbc2pipeline #(.AW(30)) wc2wp(
     .i_scyc(m_wb_cyc), 
     .i_sstb(m_wb_stb), 
     .i_swe(m_wb_we),
-	.i_saddr(m_wb_adr),
+	.i_saddr(m_wb_adr[31:2]),
 	.i_sdata(m_wb_dat_o),
 	.i_ssel(m_wb_sel),
 	.o_sack(m_wb_ack),
