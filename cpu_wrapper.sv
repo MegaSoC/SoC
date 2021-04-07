@@ -14,7 +14,11 @@ module cpu_wrapper #(
 
 wire int_cpu;
 wire cpu_aresetn;
-rstgen_bypass cpu_rstgen(cpu_clk, m0_aresetn, 1'b0, 1'b0, cpu_aresetn);
+stolen_cdc_sync_rst cpu_rstgen(
+    .dest_clk(cpu_clk),
+    .dest_rst(cpu_aresetn),
+    .src_rst(m0_aresetn)
+);
 
 stolen_cdc_single #(2, 0) int_cdc(
    .src_clk(1),
