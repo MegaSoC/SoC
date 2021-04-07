@@ -1,7 +1,9 @@
 `include "axi/typedef.svh"
 `include "axi/assign.svh"
 
-module cpu_wrapper (
+module cpu_wrapper #(
+    parameter C_ASIC_SRAM = 0
+) (
     input cpu_clk,    
     input m0_clk,
     input m0_aresetn,
@@ -172,7 +174,7 @@ axi_cdc_intf #(
 ); 
 
 // cpu
-mycpu_top #(.IMPLEMENT_LIKELY(1)) cpu_mid (
+mycpu_top #(.IMPLEMENT_LIKELY(1), .C_ASIC_SRAM(C_ASIC_SRAM)) cpu_mid (
   .aclk         (cpu_clk),
   .ext_int      ({5'b0, int_cpu}),  //232 only 5bit
   .aresetn      (cpu_aresetn    ),

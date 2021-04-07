@@ -1,4 +1,6 @@
-module soc_top(
+module soc_top #(
+    parameter C_ASIC_SRAM = 0
+) (
     input soc_clk,
     input cpu_clk,
     input aresetn,
@@ -105,7 +107,9 @@ wire sd_dat_interrupt, sd_cmd_interrupt;
 // Ethernet should be at lowest bit because the configuration in intc
 // (interrupt of emaclite is a pulse interrupt, not level) 
 wire [4:0] interrupts = {sd_dat_interrupt, sd_cmd_interrupt, uart_interrupt, spi_interrupt, eth_interrupt};
-cpu_wrapper cpu(.cpu_clk(cpu_clk), .m0_clk(soc_clk), .m0_aresetn(aresetn), .interrupt(cpu_interrupt), .m0(cpu_m));
+cpu_wrapper #(
+    .C_ASIC_SRAM(C_ASIC_SRAM)
+) cpu (.cpu_clk(cpu_clk), .m0_clk(soc_clk), .m0_aresetn(aresetn), .interrupt(cpu_interrupt), .m0(cpu_m));
 
 function logic [3:0] periph_addr_sel(input logic [ 31 : 0 ] addr);
     automatic logic [3:0] select;
@@ -176,7 +180,9 @@ axi_intc_wrapper #(
 );
 
 //eth top
-ethernet_wrapper ethernet(
+ethernet_wrapper #(
+    .C_ASIC_SRAM(C_ASIC_SRAM)
+) ethernet (
     .aclk        (soc_clk  ),
     .aresetn     (aresetn  ),      
     .slv         (eth_s    ),

@@ -1,5 +1,6 @@
-module ethernet_wrapper
-(
+module ethernet_wrapper #(
+    parameter C_ASIC_SRAM = 0
+) (
     input aclk,
     input aresetn,                     
 
@@ -37,7 +38,8 @@ wire           mcrs_0;
 axi_ethernetlite #(
   .C_S_AXI_ACLK_PERIOD_PS(10000),
   .C_TX_PING_PONG(1),
-  .C_RX_PING_PONG(1)
+  .C_RX_PING_PONG(1),
+  .C_SELECT_XPM(~C_ASIC_SRAM)
 ) eth (
   .s_axi_aclk(aclk),
   .s_axi_aresetn(aresetn),
