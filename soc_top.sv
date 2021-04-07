@@ -1,5 +1,5 @@
 module soc_top #(
-    parameter C_ASIC_SRAM = 0
+    parameter C_ASIC_SRAM = 1
 ) (
     input soc_clk,
     input cpu_clk,
@@ -111,7 +111,7 @@ cpu_wrapper #(
     .C_ASIC_SRAM(C_ASIC_SRAM)
 ) cpu (.cpu_clk(cpu_clk), .m0_clk(soc_clk), .m0_aresetn(aresetn), .interrupt(cpu_interrupt), .m0(cpu_m));
 
-function logic [3:0] periph_addr_sel(input logic [ 31 : 0 ] addr);
+function automatic logic [3:0] periph_addr_sel(input logic [ 31 : 0 ] addr);
     automatic logic [3:0] select;
     if (addr[31:27] == 5'b0) // MIG
         select = 1;
@@ -134,7 +134,7 @@ function logic [3:0] periph_addr_sel(input logic [ 31 : 0 ] addr);
     return select;
 endfunction
 
-axi_demux_intf #(
+my_axi_demux_intf #(
     .AXI_ID_WIDTH(4),
     .AXI_ADDR_WIDTH(32),
     .AXI_DATA_WIDTH(32),
@@ -145,12 +145,19 @@ axi_demux_intf #(
 ) cpu_demux (
     .clk_i(soc_clk),
     .rst_ni(aresetn),
-    .test_i('0),
+    .test_i('b0),
     .slv_aw_select_i(periph_addr_sel(cpu_m.aw_addr)),
     .slv_ar_select_i(periph_addr_sel(cpu_m.ar_addr)),
     .slv(cpu_m),
-    //      8      7      6        5      4      3     2      1       0
-    .mst({sdc_s, usb_s, intc_s, spi_s, eth_s, apb_s, cfg_s, mem_m, err_s})
+    .mst0(err_s),
+    .mst1(mem_m),
+    .mst2(cfg_s),
+    .mst3(apb_s),
+    .mst4(eth_s),
+    .mst5(spi_s),
+    .mst6(intc_s),
+    .mst7(usb_s),
+    .mst8(sdc_s)
 );
 
 axi_mux_intf #(
@@ -165,7 +172,8 @@ axi_mux_intf #(
     .clk_i(soc_clk),
     .rst_ni(aresetn),
     .test_i(1'b0),
-    .slv({sdc_dma_m, mem_m}),
+    .slv0(sdc_dma_m),
+    .slv1(mem_m),
     .mst(mig_s)
 );
 
@@ -229,7 +237,7 @@ confreg CONFREG(
     .aresetn        (aresetn            ),       
     .s_awid         (cfg_s.aw_id        ),
     .s_awaddr       (cfg_s.aw_addr      ),
-    .s_awlen        (cfg_s.aw_len[3:0]       ),
+    .s_awlen        (cfg_s.aw_len       ),
     .s_awsize       (cfg_s.aw_size      ),
     .s_awburst      (cfg_s.aw_burst     ),
     .s_awlock       ('0                 ),
@@ -248,7 +256,7 @@ confreg CONFREG(
     .s_bready       (cfg_s.b_ready      ),
     .s_arid         (cfg_s.ar_id        ),
     .s_araddr       (cfg_s.ar_addr      ),
-    .s_arlen        (cfg_s.ar_len[3:0]       ),
+    .s_arlen        (cfg_s.ar_len       ),
     .s_arsize       (cfg_s.ar_size      ),
     .s_arburst      (cfg_s.ar_burst     ),
     .s_arlock       ('0                 ),
