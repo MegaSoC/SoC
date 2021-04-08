@@ -35,7 +35,7 @@ module error_slave_wrapper (
   ) err_slv (
       .clk_i(aclk),
       .rst_ni(aresetn),
-      .test_i(0),
+      .test_i(1'b0),
       .slv_req_i(slv_req),
       .slv_resp_o(slv_resp)
   );

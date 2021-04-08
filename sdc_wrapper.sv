@@ -113,7 +113,7 @@ axi_to_axi_lite_intf #(
 ) slv_conv (
     .clk_i(aclk),
     .rst_ni(aresetn),
-    .testmode_i('b0),
+    .testmode_i(1'b0),
     .slv(slv),
     .mst(slv_lite)
 );

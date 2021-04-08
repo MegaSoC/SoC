@@ -21,7 +21,7 @@ stolen_cdc_sync_rst cpu_rstgen(
 );
 
 stolen_cdc_single #(2, 0) int_cdc(
-   .src_clk(1),
+   .src_clk(1'b1),
    .src_in(interrupt),
    .dest_clk(cpu_clk),
    .dest_out(int_cpu)

@@ -65,7 +65,7 @@ module soc_top #(
     output          md_t_0,
     output          phy_rstn,
     
-    output [2:0]    led,
+    output [15:0]   led,
     
     input  [3:0]    sd_dat_i,
     output [3:0]    sd_dat_o,
@@ -145,7 +145,7 @@ my_axi_demux_intf #(
 ) cpu_demux (
     .clk_i(soc_clk),
     .rst_ni(aresetn),
-    .test_i('b0),
+    .test_i(1'b0),
     .slv_aw_select_i(periph_addr_sel(cpu_m.aw_addr)),
     .slv_ar_select_i(periph_addr_sel(cpu_m.ar_addr)),
     .slv(cpu_m),
@@ -271,9 +271,9 @@ confreg CONFREG(
     .s_rlast        (cfg_s.r_last       ),
     .s_rvalid       (cfg_s.r_valid      ),
     
-    .order_addr_reg    (        ),
-    .write_dma_end     (0       ),
-    .finish_read_order (0       ),
+    .order_addr_reg    (                ),
+    .write_dma_end     (1'b0            ),
+    .finish_read_order (1'b0            ),
 
     .led            (led)
 );
@@ -382,10 +382,10 @@ axi2apb_misc APB_DEV
 .uart0_rxd_oe       (uart_rxd_en     ),
 .uart0_rts_o        (       ),
 .uart0_dtr_o        (       ),
-.uart0_cts_i        (0      ),
-.uart0_dsr_i        (0      ),
-.uart0_dcd_i        (0      ),
-.uart0_ri_i         (0      ),
+.uart0_cts_i        (1'b0   ),
+.uart0_dsr_i        (1'b0   ),
+.uart0_dcd_i        (1'b0   ),
+.uart0_ri_i         (1'b0   ),
 .uart0_int          (uart_interrupt)
 );
 

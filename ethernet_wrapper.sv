@@ -101,7 +101,7 @@ mii_to_rmii #(
     
     .mac2rmii_tx_en(mtxen_0),
     .mac2rmii_txd(mtxd_0),
-    .mac2rmii_tx_er(0),
+    .mac2rmii_tx_er(1'b0),
     .rmii2mac_tx_clk(mtxclk_0),
     .rmii2mac_rx_clk(mrxclk_0),
     .rmii2mac_col(mcoll_0),
