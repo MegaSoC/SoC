@@ -82,7 +82,11 @@ module soc_top #(
     output          ULPI_resetn,
     output          ULPI_stp,
     input           ULPI_dir,
-    input           ULPI_nxt
+    input           ULPI_nxt,
+    
+    output          CDBUS_tx,
+    output          CDBUS_tx_en,
+    input           CDBUS_rx
 );
 
 `define AXI_LINE(name) AXI_BUS #(.AXI_ADDR_WIDTH(32), .AXI_DATA_WIDTH(32), .AXI_ID_WIDTH(4)) name()
@@ -111,9 +115,10 @@ wire uart_interrupt;
 wire cpu_interrupt;
 wire sd_dat_interrupt, sd_cmd_interrupt;
 wire usb_interrupt;
+wire cdbus_interrupt;
 // Ethernet should be at lowest bit because the configuration in intc
 // (interrupt of emaclite is a pulse interrupt, not level) 
-wire [5:0] interrupts = {usb_interrupt, sd_dat_interrupt, sd_cmd_interrupt, uart_interrupt, spi_interrupt, eth_interrupt};
+wire [6:0] interrupts = {cdbus_interrupt, usb_interrupt, sd_dat_interrupt, sd_cmd_interrupt, uart_interrupt, spi_interrupt, eth_interrupt};
 cpu_wrapper #(
     .C_ASIC_SRAM(C_ASIC_SRAM)
 ) cpu (.cpu_clk(cpu_clk), .m0_clk(soc_clk), .m0_aresetn(aresetn), .interrupt(cpu_interrupt), .m0(cpu_m));
@@ -409,7 +414,12 @@ axi2apb_misc APB_DEV
 .uart0_dsr_i        (1'b0   ),
 .uart0_dcd_i        (1'b0   ),
 .uart0_ri_i         (1'b0   ),
-.uart0_int          (uart_interrupt)
+.uart0_int          (uart_interrupt),
+
+.cdbus_int          (cdbus_interrupt),
+.cdbus_tx           (CDBUS_tx),
+.cdbus_rx           (CDBUS_rx),
+.cdbus_tx_en        (CDBUS_tx_en)
 );
 
     assign mem_axi_awid = mig_s.aw_id;
