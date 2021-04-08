@@ -73,7 +73,16 @@ module soc_top #(
     input           sd_cmd_i,
     output          sd_cmd_o,
     output          sd_cmd_t,
-    output          sd_clk
+    output          sd_clk,
+    
+    input           ULPI_clk,
+    input     [7:0] ULPI_data_i,
+    output    [7:0] ULPI_data_o,
+    output    [7:0] ULPI_data_t,
+    output          ULPI_resetn,
+    output          ULPI_stp,
+    input           ULPI_dir,
+    input           ULPI_nxt
 );
 
 `define AXI_LINE(name) AXI_BUS #(.AXI_ADDR_WIDTH(32), .AXI_DATA_WIDTH(32), .AXI_ID_WIDTH(4)) name()
@@ -92,21 +101,19 @@ module soc_top #(
 `AXI_LINE_W(mig_s, 5);
 `AXI_LINE(apb_s);
 `AXI_LINE(cfg_s);
-
+`AXI_LINE(usb_s);
 `AXI_LINE(err_s);
 error_slave_wrapper err_slave_err(soc_clk, aresetn, err_s);
-
-`AXI_LINE(usb_s);
-error_slave_wrapper err_slave_usb(soc_clk, aresetn, usb_s);
 
 wire spi_interrupt;
 wire eth_interrupt;
 wire uart_interrupt;
 wire cpu_interrupt;
 wire sd_dat_interrupt, sd_cmd_interrupt;
+wire usb_interrupt;
 // Ethernet should be at lowest bit because the configuration in intc
 // (interrupt of emaclite is a pulse interrupt, not level) 
-wire [4:0] interrupts = {sd_dat_interrupt, sd_cmd_interrupt, uart_interrupt, spi_interrupt, eth_interrupt};
+wire [5:0] interrupts = {usb_interrupt, sd_dat_interrupt, sd_cmd_interrupt, uart_interrupt, spi_interrupt, eth_interrupt};
 cpu_wrapper #(
     .C_ASIC_SRAM(C_ASIC_SRAM)
 ) cpu (.cpu_clk(cpu_clk), .m0_clk(soc_clk), .m0_aresetn(aresetn), .interrupt(cpu_interrupt), .m0(cpu_m));
@@ -229,6 +236,22 @@ sdc_wrapper sdc(
     .sd_cmd_o(sd_cmd_o),
     .sd_cmd_t(sd_cmd_t),
     .sd_clk(sd_clk)
+);
+
+usb_wrapper usb_ctrl(
+   .aclk(soc_clk),
+   .aresetn(aresetn),
+   .slv(usb_s),
+   .interrupt(usb_interrupt),
+   
+   .ULPI_clk,
+   .ULPI_data_i,
+   .ULPI_data_o,
+   .ULPI_data_t,
+   .ULPI_resetn,
+   .ULPI_stp,
+   .ULPI_dir,
+   .ULPI_nxt
 );
 
 //confreg
