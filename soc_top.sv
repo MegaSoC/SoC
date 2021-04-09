@@ -243,7 +243,9 @@ sdc_wrapper sdc(
     .sd_clk(sd_clk)
 );
 
-usb_wrapper usb_ctrl(
+usb_wrapper #(
+    .C_ASIC_SRAM(C_ASIC_SRAM)
+) usb_ctrl (
    .aclk(soc_clk),
    .aresetn(aresetn),
    .slv(usb_s),

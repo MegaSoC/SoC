@@ -1,4 +1,6 @@
-module usb_wrapper (
+module usb_wrapper #(
+    parameter C_ASIC_SRAM = 0
+)  (
     input aclk,
     input aresetn,
     AXI_BUS.Slave slv,
@@ -94,40 +96,53 @@ axi_ahblite_bridge conv (
 wire [34:0] fifo_din, fifo_dout;
 wire [10:0] fifo_addr;
 wire fifo_ce, fifo_we;
-xpm_memory_spram #(
-      .ADDR_WIDTH_A(11),              // DECIMAL
-      .AUTO_SLEEP_TIME(0),           // DECIMAL
-      .BYTE_WRITE_WIDTH_A(35),       // DECIMAL
-      .CASCADE_HEIGHT(0),            // DECIMAL
-      .ECC_MODE("no_ecc"),           // String
-      .MEMORY_INIT_FILE("none"),     // String
-      .MEMORY_INIT_PARAM("0"),       // String
-      .MEMORY_OPTIMIZATION("true"),  // String
-      .MEMORY_PRIMITIVE("auto"),     // String
-      .MEMORY_SIZE(71680),            // DECIMAL
-      .MESSAGE_CONTROL(0),           // DECIMAL
-      .READ_DATA_WIDTH_A(35),        // DECIMAL
-      .READ_LATENCY_A(1),            // DECIMAL
-      .READ_RESET_VALUE_A("0"),      // String
-      .RST_MODE_A("SYNC"),           // String
-      .SIM_ASSERT_CHK(0),            // DECIMAL; 0=disable simulation messages, 1=enable simulation messages
-      .USE_MEM_INIT(0),              // DECIMAL
-      .WAKEUP_TIME("disable_sleep"), // String
-      .WRITE_DATA_WIDTH_A(35),       // DECIMAL
-      .WRITE_MODE_A("write_first")    // String
-   ) usb_fifo (
-      .douta(fifo_dout),
-      .addra(fifo_addr),
-      .clka(aclk),
-      .dina(fifo_din),
-      .ena(~fifo_ce),
-      .injectdbiterra(0),
-      .injectsbiterra(0), 
-      .regcea(1),
-      .rsta(0),
-      .sleep(0),
-      .wea(~fifo_we)
-   );
+
+generate if (C_ASIC_SRAM) begin
+    S018SP_RAM_SP_W2048_B35_M4 usb_fifo_s (
+        .Q(fifo_dout),
+        .CLK(aclk),
+        .CEN(fifo_ce),
+        .WEN(fifo_we),
+        .A(fifo_addr),
+        .D(fifo_din)
+    );
+end else begin
+    xpm_memory_spram #(
+          .ADDR_WIDTH_A(11),              // DECIMAL
+          .AUTO_SLEEP_TIME(0),           // DECIMAL
+          .BYTE_WRITE_WIDTH_A(35),       // DECIMAL
+          .CASCADE_HEIGHT(0),            // DECIMAL
+          .ECC_MODE("no_ecc"),           // String
+          .MEMORY_INIT_FILE("none"),     // String
+          .MEMORY_INIT_PARAM("0"),       // String
+          .MEMORY_OPTIMIZATION("true"),  // String
+          .MEMORY_PRIMITIVE("auto"),     // String
+          .MEMORY_SIZE(71680),            // DECIMAL
+          .MESSAGE_CONTROL(0),           // DECIMAL
+          .READ_DATA_WIDTH_A(35),        // DECIMAL
+          .READ_LATENCY_A(1),            // DECIMAL
+          .READ_RESET_VALUE_A("0"),      // String
+          .RST_MODE_A("SYNC"),           // String
+          .SIM_ASSERT_CHK(0),            // DECIMAL; 0=disable simulation messages, 1=enable simulation messages
+          .USE_MEM_INIT(0),              // DECIMAL
+          .WAKEUP_TIME("disable_sleep"), // String
+          .WRITE_DATA_WIDTH_A(35),       // DECIMAL
+          .WRITE_MODE_A("write_first")    // String
+       ) usb_fifo (
+          .douta(fifo_dout),
+          .addra(fifo_addr),
+          .clka(aclk),
+          .dina(fifo_din),
+          .ena(~fifo_ce),
+          .injectdbiterra(0),
+          .injectsbiterra(0), 
+          .regcea(1),
+          .rsta(0),
+          .sleep(0),
+          .wea(~fifo_we)
+       );
+end
+endgenerate
 
 DWC_otg ctrl(
     .hclk(aclk),
