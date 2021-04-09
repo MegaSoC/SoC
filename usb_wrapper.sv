@@ -24,7 +24,7 @@ logic [2:0]      ahb_hburst;      // burst
 (* mark_debug = "true" *)logic [31:0]     ahb_hwdata;      // ahb bus write data
 (* mark_debug = "true" *)logic [31:0]     ahb_hrdata;      // ahb bus read data
 (* mark_debug = "true" *)logic            ahb_hready;      // slave ready to accept transaction
-(* mark_debug = "true" *)logic            ahb_hresp;       // slave response (high indicates erro)
+(* mark_debug = "true" *)logic [1:0]      ahb_hresp;       // slave response (high indicates erro)
 
 (* mark_debug = "true" *) logic [218:0] dbg_p;
 logic [218:0] dbg_p_synced;
@@ -48,7 +48,7 @@ axi_ahblite_bridge conv (
     .m_ahb_hwdata    (ahb_hwdata),
     .m_ahb_hrdata    (ahb_hrdata),
     .m_ahb_hready    (ahb_hready),
-    .m_ahb_hresp     (ahb_hresp ),
+    .m_ahb_hresp     (ahb_hresp[0]),
     
     .s_axi_awid(slv.aw_id),
     .s_axi_awaddr(slv.aw_addr),
@@ -78,7 +78,7 @@ axi_ahblite_bridge conv (
     .s_axi_arcache(4'b0),
     .s_axi_arlock(1'b0),
     .s_axi_arlen(slv.ar_len),
-    .s_axi_arsize(slv.ar_size[1:0]),
+    .s_axi_arsize(slv.ar_size),
     .s_axi_arvalid(slv.ar_valid),
     .s_axi_arburst(slv.ar_burst),
     .s_axi_arready(slv.ar_ready),
@@ -141,14 +141,14 @@ DWC_otg ctrl(
     .s_hresp        (ahb_hresp   ),           // AHB Transfer Response
     .s_hrdata       (ahb_hrdata  ),           // AHB Read Data
     .s_haddr        (ahb_haddr   ),           // AHB Address Bus
-    .s_hsel         (1           ),           // AHB Device Select
+    .s_hsel         ('1          ),           // AHB Device Select
     .s_hwrite       (ahb_hwrite  ),           // AHB Transfer Direction
     .s_htrans       (ahb_htrans  ),           // AHB Transfer Type
     .s_hsize        (ahb_hsize   ),           // AHB Transfer Size
     .s_hburst       (ahb_hburst  ),           // AHB Burst Type
-    .s_hready       (1           ),           // AHB Transfer Done - In
+    .s_hready       ('1          ),           // AHB Transfer Done - In
     .s_hwdata       (ahb_hwdata  ),           // AHB Write Data
-    .s_hbigendian   (0           ),           // AHB Big Indian Mode
+    .s_hbigendian   ('0          ),           // AHB Big Indian Mode
     
     .dfifo_h_rdata  (fifo_dout   ),           // DFIFO Read Data
     .dfifo_h_wr_n   (fifo_we     ),           // DFIFO Write - Active low
@@ -166,7 +166,7 @@ DWC_otg ctrl(
     .ulpi_data_out_en (ulpi_output_en),
     
     .sof_update_toggle(1'b0),
-    .sof_count(1'b0),
+    .sof_count('0),
     .ss_scaledown_mode(2'b0),
     
     .internal_probes(dbg),
@@ -174,3 +174,4 @@ DWC_otg ctrl(
 );
     
 endmodule
+
