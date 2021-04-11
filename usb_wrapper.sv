@@ -15,8 +15,7 @@ module usb_wrapper #(
     input  wire       ULPI_dir,
     input  wire       ULPI_nxt
 );
-
-stolen_cdc_single #(2, 1) reset_cdc (aclk, aresetn, ULPI_clk, ULPI_resetn);
+assign ULPI_resetn = aresetn;
 
 (* mark_debug = "true" *)logic [31:0]     ahb_haddr;       // ahb bus address
 logic [2:0]      ahb_hburst;      // burst
