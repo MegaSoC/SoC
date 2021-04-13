@@ -30,25 +30,25 @@ wire           sp_wb_ack;     // WISHBONE acknowledge output
 wire           sp_wb_stall;     // WISHBONE acknowledge output
 
 // WISHBONE slave
-wire   [31:0]  s_wb_dat_i;     // WISHBONE data input
-wire   [31:0]  s_wb_dat_o;     // WISHBONE data output
-wire   [31:2]  s_wb_adr;     // WISHBONE address input
-wire    [3:0]  s_wb_sel;     // WISHBONE byte select input
-wire           s_wb_we;      // WISHBONE write enable input
-wire           s_wb_cyc;     // WISHBONE cycle input
-wire           s_wb_stb;     // WISHBONE strobe input
-wire           s_wb_ack;     // WISHBONE acknowledge output
+(* mark_debug = "true" *)wire   [31:0]  s_wb_dat_i;     // WISHBONE data input
+(* mark_debug = "true" *)wire   [31:0]  s_wb_dat_o;     // WISHBONE data output
+(* mark_debug = "true" *)wire   [31:2]  s_wb_adr;     // WISHBONE address input
+(* mark_debug = "true" *)wire    [3:0]  s_wb_sel;     // WISHBONE byte select input
+(* mark_debug = "true" *)wire           s_wb_we;      // WISHBONE write enable input
+(* mark_debug = "true" *)wire           s_wb_cyc;     // WISHBONE cycle input
+(* mark_debug = "true" *)wire           s_wb_stb;     // WISHBONE strobe input
+(* mark_debug = "true" *)wire           s_wb_ack;     // WISHBONE acknowledge output
 
 // WISHBONE master
-wire  [31:0]  m_wb_adr;
-wire   [3:0]  m_wb_sel;
-wire          m_wb_we;
-wire  [31:0]  m_wb_dat_i;
-wire  [31:0]  m_wb_dat_o;
-wire          m_wb_cyc;
-wire          m_wb_stb;
-wire          m_wb_ack;
-wire          m_wb_err;
+(* mark_debug = "true" *)wire  [31:0]  m_wb_adr;
+(* mark_debug = "true" *)wire   [3:0]  m_wb_sel;
+(* mark_debug = "true" *)wire          m_wb_we;
+(* mark_debug = "true" *)wire  [31:0]  m_wb_dat_i;
+(* mark_debug = "true" *)wire  [31:0]  m_wb_dat_o;
+(* mark_debug = "true" *)wire          m_wb_cyc;
+(* mark_debug = "true" *)wire          m_wb_stb;
+(* mark_debug = "true" *)wire          m_wb_ack;
+(* mark_debug = "true" *)wire          m_wb_err;
 
 // WISHBONE pipeline master
 wire  [31:2]  mp_wb_adr;

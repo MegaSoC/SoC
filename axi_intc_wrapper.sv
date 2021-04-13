@@ -27,7 +27,7 @@ axi_to_axi_lite_intf #(
 
 axi_intc #(
     .C_NUM_INTR_INPUTS(C_NUM_INTR_INPUTS),
-    .C_KIND_OF_INTR(32'hfffffffe),
+    .C_KIND_OF_INTR(32'h1),
     .C_ASYNC_INTR(32'h0),
     .C_DISABLE_SYNCHRONIZERS(1) // all interrupts are from same clock domain
 ) intc (

@@ -1,3 +1,4 @@
+(* keep_hierarchy = "yes" *)
 module soc_top #(
     parameter C_ASIC_SRAM = 1
 ) (
@@ -5,8 +6,8 @@ module soc_top #(
     input cpu_clk,
     input aresetn,
     
-    output [4:0]  mem_axi_awid,
-    output [27:0] mem_axi_awaddr,
+    output [5:0]  mem_axi_awid,
+    output [31:0] mem_axi_awaddr,
     output [7:0]  mem_axi_awlen,
     output [2:0]  mem_axi_awsize,
     output [1:0]  mem_axi_awburst,
@@ -18,18 +19,18 @@ module soc_top #(
     output        mem_axi_wvalid,
     input         mem_axi_wready,
     output        mem_axi_bready,
-    input  [4:0]  mem_axi_bid,
+    input  [5:0]  mem_axi_bid,
     input  [1:0]  mem_axi_bresp,
     input         mem_axi_bvalid,
-    output [4:0]  mem_axi_arid,
-    output [27:0] mem_axi_araddr,
+    output [5:0]  mem_axi_arid,
+    output [31:0] mem_axi_araddr,
     output [7:0]  mem_axi_arlen,
     output [2:0]  mem_axi_arsize,
     output [1:0]  mem_axi_arburst,
     output        mem_axi_arvalid,
     input         mem_axi_arready,
     output        mem_axi_rready,
-    input [4:0]   mem_axi_rid,
+    input [5:0]   mem_axi_rid,
     input [31:0]  mem_axi_rdata,
     input [1:0]   mem_axi_rresp,
     input         mem_axi_rlast,
@@ -79,7 +80,6 @@ module soc_top #(
     input     [7:0] ULPI_data_i,
     output    [7:0] ULPI_data_o,
     output    [7:0] ULPI_data_t,
-    output          ULPI_resetn,
     output          ULPI_stp,
     input           ULPI_dir,
     input           ULPI_nxt,
@@ -95,6 +95,7 @@ module soc_top #(
 
 `AXI_LINE(cpu_m);
 `AXI_LINE(sdc_dma_m);
+`AXI_LINE(usb_dma_m);
 `AXI_LINE(mem_m);
 
 `AXI_LINE(spi_s);
@@ -102,7 +103,7 @@ module soc_top #(
 `AXI_LINE(intc_s);
 `AXI_LINE(sdc_s);
 
-`AXI_LINE_W(mig_s, 5);
+`AXI_LINE_W(mig_s, 6);
 `AXI_LINE(apb_s);
 `AXI_LINE(cfg_s);
 `AXI_LINE(usb_s);
@@ -174,10 +175,10 @@ my_axi_demux_intf #(
 
 axi_mux_intf #(
     .SLV_AXI_ID_WIDTH(4),
-    .MST_AXI_ID_WIDTH(5),
+    .MST_AXI_ID_WIDTH(6),
     .AXI_ADDR_WIDTH(32),
     .AXI_DATA_WIDTH(32),
-    .NO_SLV_PORTS(2),
+    .NO_SLV_PORTS(3),
     .MAX_W_TRANS(2),
     .FALL_THROUGH(1)
 ) mem_mux (
@@ -186,6 +187,7 @@ axi_mux_intf #(
     .test_i(1'b0),
     .slv0(sdc_dma_m),
     .slv1(mem_m),
+    .slv2(usb_dma_m),
     .mst(mig_s)
 );
 
@@ -250,12 +252,12 @@ usb_wrapper #(
    .aresetn(aresetn),
    .slv(usb_s),
    .interrupt(usb_interrupt),
-   
+   .dma_mst(usb_dma_m),
+
    .ULPI_clk,
    .ULPI_data_i,
    .ULPI_data_o,
    .ULPI_data_t,
-   .ULPI_resetn,
    .ULPI_stp,
    .ULPI_dir,
    .ULPI_nxt
