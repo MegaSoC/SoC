@@ -83,11 +83,11 @@ axi_ahblite_bridge conv (
 );
 
 wire [34:0] fifo_din, fifo_dout;
-wire [12:0] fifo_addr;
+wire [11:0] fifo_addr;
 wire fifo_ce, fifo_we;
 
 generate if (C_ASIC_SRAM) begin
-    S018SP_RAM_SP_W8192_B35_M4 usb_fifo_s (
+    S018SP_RAM_SP_W4096_B35_M8 usb_fifo_s (
         .Q(fifo_dout),
         .CLK(aclk),
         .CEN(fifo_ce),
@@ -97,7 +97,7 @@ generate if (C_ASIC_SRAM) begin
     );
 end else begin
     xpm_memory_spram #(
-          .ADDR_WIDTH_A(13),              // DECIMAL
+          .ADDR_WIDTH_A($bits(fifo_addr)),              // DECIMAL
           .AUTO_SLEEP_TIME(0),           // DECIMAL
           .BYTE_WRITE_WIDTH_A(35),       // DECIMAL
           .CASCADE_HEIGHT(0),            // DECIMAL
@@ -106,7 +106,7 @@ end else begin
           .MEMORY_INIT_PARAM("0"),       // String
           .MEMORY_OPTIMIZATION("true"),  // String
           .MEMORY_PRIMITIVE("auto"),     // String
-          .MEMORY_SIZE(35*(1<<13)),            // DECIMAL
+          .MEMORY_SIZE(35*(1<<$bits(fifo_addr))),            // DECIMAL
           .MESSAGE_CONTROL(0),           // DECIMAL
           .READ_DATA_WIDTH_A(35),        // DECIMAL
           .READ_LATENCY_A(1),            // DECIMAL
@@ -188,6 +188,9 @@ ahblite_axi_bridge mstconv (
 wire [7:0] ulpi_output_en;
 assign ULPI_data_t = ~ulpi_output_en;
 
+(* KEEP *) wire phy_clk;
+
+(* keep_hierarchy = "yes" *)
 DWC_otg ctrl(
     .hclk(aclk),
     .hreset_n(aresetn),
@@ -195,6 +198,7 @@ DWC_otg ctrl(
     .interrupt(interrupt),
     .scan_mode(1'b0),
     .gp_in(16'b0),
+    .phy_clk(phy_clk),
     
     .s_hready_resp  (ahb_hready  ),           // AHB Transfer Done - Out
     .s_hresp        (ahb_hresp   ),           // AHB Transfer Response
