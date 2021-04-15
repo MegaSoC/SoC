@@ -161,7 +161,7 @@ ahblite_axi_bridge mstconv (
     .s_ahb_hwrite (dma_hwrite  ),
     .s_ahb_hready_out (dma_hready_miso),
     .s_ahb_hready_in  (dma_hready_miso),
-    .s_ahb_hresp      (dma_hresp      ),
+    .s_ahb_hresp      (dma_hresp[0]   ),
       
     .m_axi_awready (dma_mst.aw_ready), .m_axi_awaddr (dma_mst.aw_addr),
     .m_axi_awvalid (dma_mst.aw_valid), .m_axi_awid   (dma_mst.aw_id  ),
