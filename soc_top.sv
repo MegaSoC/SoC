@@ -364,7 +364,7 @@ spi_flash_ctrl SPI (
     .inta_o         (spi_interrupt )
 );
 
-axi2apb_misc APB_DEV 
+axi2apb_misc #(.C_ASIC_SRAM(C_ASIC_SRAM)) APB_DEV 
 (
 .clk                (soc_clk               ),
 .rst_n              (aresetn            ),
