@@ -8,11 +8,11 @@ module cpu_wrapper #(
     input m0_clk,
     input m0_aresetn,
     
-    input interrupt,
+    input [1:0] interrupt,
     AXI_BUS.Master m0
 );
 
-wire int_cpu;
+wire [1:0] int_cpu;
 wire cpu_aresetn;
 stolen_cdc_sync_rst cpu_rstgen(
     .dest_clk(cpu_clk),
@@ -20,7 +20,7 @@ stolen_cdc_sync_rst cpu_rstgen(
     .src_rst(m0_aresetn)
 );
 
-stolen_cdc_single #(2, 0) int_cdc(
+stolen_cdc_array_single #(2, 0, 2) int_cdc(
    .src_clk(1'b1),
    .src_in(interrupt),
    .dest_clk(cpu_clk),
@@ -180,7 +180,7 @@ axi_cdc_intf #(
 // cpu
 mycpu_top #(.IMPLEMENT_LIKELY(1), .C_ASIC_SRAM(C_ASIC_SRAM)) cpu_mid (
   .aclk         (cpu_clk),
-  .ext_int      ({5'b0, int_cpu}),  //232 only 5bit
+  .ext_int      ({4'b0, int_cpu}),  //232 only 5bit
   .aresetn      (cpu_aresetn    ),
  
   .arid         (cpu_arid[3:0] ),

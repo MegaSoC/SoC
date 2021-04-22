@@ -86,7 +86,17 @@ module soc_top #(
     
     output          CDBUS_tx,
     output          CDBUS_tx_en,
-    input           CDBUS_rx
+    input           CDBUS_rx,
+
+    output   [31:0] dat_cfg_to_ctrl,
+    input    [31:0] dat_ctrl_to_cfg,
+
+    output   [7:0] gpio_o,
+    input    [7:0] gpio_i,
+    output   [7:0] gpio_t,
+    
+    input    [3:0]  spi_div_ctrl,
+    input           intr_ctrl
 );
 
 `define AXI_LINE(name) AXI_BUS #(.AXI_ADDR_WIDTH(32), .AXI_DATA_WIDTH(32), .AXI_ID_WIDTH(4)) name()
@@ -122,7 +132,7 @@ wire cdbus_interrupt;
 wire [6:0] interrupts = {cdbus_interrupt, usb_interrupt, sd_dat_interrupt, sd_cmd_interrupt, uart_interrupt, spi_interrupt, eth_interrupt};
 cpu_wrapper #(
     .C_ASIC_SRAM(C_ASIC_SRAM)
-) cpu (.cpu_clk(cpu_clk), .m0_clk(soc_clk), .m0_aresetn(aresetn), .interrupt(cpu_interrupt), .m0(cpu_m));
+) cpu (.cpu_clk(cpu_clk), .m0_clk(soc_clk), .m0_aresetn(aresetn), .interrupt({intr_ctrl, cpu_interrupt}), .m0(cpu_m));
 
 function automatic logic [3:0] periph_addr_sel(input logic [ 31 : 0 ] addr);
     automatic logic [3:0] select;
@@ -302,12 +312,12 @@ confreg CONFREG(
     .s_rresp        (cfg_s.r_resp       ),
     .s_rlast        (cfg_s.r_last       ),
     .s_rvalid       (cfg_s.r_valid      ),
-    
-    .order_addr_reg    (                ),
-    .write_dma_end     (1'b0            ),
-    .finish_read_order (1'b0            ),
 
-    .led            (led)
+    .dat_cfg_to_ctrl,
+    .dat_ctrl_to_cfg,
+    .gpio_o,
+    .gpio_i,
+    .gpio_t
 );
 
 spi_flash_ctrl SPI (                                         
@@ -361,7 +371,9 @@ spi_flash_ctrl SPI (
     .sdi_i          (sdi_i         ),
     .sdi_o          (sdi_o         ),
     .sdi_en         (sdi_en        ),
-    .inta_o         (spi_interrupt )
+    .inta_o         (spi_interrupt ),
+    
+    .default_div    (spi_div_ctrl  )
 );
 
 axi2apb_misc #(.C_ASIC_SRAM(C_ASIC_SRAM)) APB_DEV 
