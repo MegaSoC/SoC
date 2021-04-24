@@ -188,8 +188,6 @@ ahblite_axi_bridge mstconv (
 wire [7:0] ulpi_output_en;
 assign ULPI_data_t = ~ulpi_output_en;
 
-(* KEEP *) wire phy_clk;
-
 (* keep_hierarchy = "yes" *)
 DWC_otg ctrl(
     .hclk(aclk),
@@ -198,7 +196,6 @@ DWC_otg ctrl(
     .interrupt(interrupt),
     .scan_mode(1'b0),
     .gp_in(16'b0),
-    .phy_clk(phy_clk),
     
     .s_hready_resp  (ahb_hready  ),           // AHB Transfer Done - Out
     .s_hresp        (ahb_hresp   ),           // AHB Transfer Response
