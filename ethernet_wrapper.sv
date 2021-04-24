@@ -36,7 +36,7 @@ wire           mcoll_0;
 wire           mcrs_0;
 
 axi_ethernetlite #(
-  .C_S_AXI_ACLK_PERIOD_PS(10000),
+  .C_S_AXI_ACLK_PERIOD_PS(7500),
   .C_TX_PING_PONG(1),
   .C_RX_PING_PONG(1),
   .C_SELECT_XPM(!C_ASIC_SRAM)
