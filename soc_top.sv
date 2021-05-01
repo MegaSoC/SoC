@@ -96,7 +96,10 @@ module soc_top #(
     output   [7:0] gpio_t,
     
     input    [3:0]  spi_div_ctrl,
-    input           intr_ctrl
+    input           intr_ctrl,
+
+    input    [1:0]  debug_output_mode,
+    output   [3:0]  debug_output_data
 );
 
 `define AXI_LINE(name) AXI_BUS #(.AXI_ADDR_WIDTH(32), .AXI_DATA_WIDTH(32), .AXI_ID_WIDTH(4)) name()
@@ -132,7 +135,16 @@ wire cdbus_interrupt;
 wire [6:0] interrupts = {cdbus_interrupt, usb_interrupt, sd_dat_interrupt, sd_cmd_interrupt, uart_interrupt, spi_interrupt, eth_interrupt};
 cpu_wrapper #(
     .C_ASIC_SRAM(C_ASIC_SRAM)
-) cpu (.cpu_clk(cpu_clk), .m0_clk(soc_clk), .m0_aresetn(aresetn), .interrupt({intr_ctrl, cpu_interrupt}), .m0(cpu_m));
+) cpu (
+    .cpu_clk(cpu_clk),
+    .m0_clk(soc_clk),
+    .m0_aresetn(aresetn),
+    .interrupt({intr_ctrl, cpu_interrupt}),
+    .m0(cpu_m),
+
+    .debug_output_mode(debug_output_mode),
+    .debug_output_data(debug_output_data)
+);
 
 function automatic logic [3:0] periph_addr_sel(input logic [ 31 : 0 ] addr);
     automatic logic [3:0] select;

@@ -9,7 +9,10 @@ module cpu_wrapper #(
     input m0_aresetn,
     
     input [1:0] interrupt,
-    AXI_BUS.Master m0
+    AXI_BUS.Master m0,
+
+    input [1:0]  debug_output_mode,
+    output [3:0] debug_output_data
 );
 
 wire [1:0] int_cpu;
@@ -25,6 +28,14 @@ stolen_cdc_array_single #(2, 0, 2) int_cdc(
    .src_in(interrupt),
    .dest_clk(cpu_clk),
    .dest_out(int_cpu)
+);
+
+wire [1:0] debug_output_mode_synced;
+stolen_cdc_array_single #(2, 0, 2) dbg_cdc(
+   .src_clk(1'b1),
+   .src_in(debug_output_mode),
+   .dest_clk(cpu_clk),
+   .dest_out(debug_output_mode_synced)
 );
 
 AXI_BUS #(.AXI_ADDR_WIDTH(32), .AXI_DATA_WIDTH(32), .AXI_ID_WIDTH(4)) cpu();
@@ -177,6 +188,10 @@ axi_cdc_intf #(
     .dst(m0)
 ); 
 
+wire [31:0] debug_wb_pc;
+wire [31:0] debug_wb_instr;
+wire [31:0] debug_wb_rf_wdata;
+
 // cpu
 mycpu_top #(.IMPLEMENT_LIKELY(1), .C_ASIC_SRAM(C_ASIC_SRAM)) cpu_mid (
   .aclk         (cpu_clk),
@@ -217,7 +232,23 @@ mycpu_top #(.IMPLEMENT_LIKELY(1), .C_ASIC_SRAM(C_ASIC_SRAM)) cpu_mid (
   .bid          (cpu_bid[3:0]  ),
   .bresp        (cpu_bresp     ),
   .bvalid       (cpu_bvalid    ),
-  .bready       (cpu_bready    )
+  .bready       (cpu_bready    ),
+
+  .debug_wb_pc  (debug_wb_pc   ),
+  .debug_wb_instr(debug_wb_instr),
+  .debug_wb_rf_wdata(debug_wb_rf_wdata)
+);
+
+debug_output debugger (
+  .clk(cpu_clk),
+  .rst(~cpu_aresetn),
+
+  .debug_wb_pc  (debug_wb_pc   ),
+  .debug_wb_instr(debug_wb_instr),
+  .debug_wb_rf_wdata(debug_wb_rf_wdata),
+
+  .mode(debug_output_mode_synced),
+  .data(debug_output_data)
 );
 
 endmodule
