@@ -99,7 +99,15 @@ module soc_top #(
     input           intr_ctrl,
 
     input    [1:0]  debug_output_mode,
-    output   [3:0]  debug_output_data
+    output   [3:0]  debug_output_data,
+
+    input  i2cm_scl_i,
+    output i2cm_scl_o,
+    output i2cm_scl_t,
+
+    input  i2cm_sda_i,
+    output i2cm_sda_o,
+    output i2cm_sda_t
 );
 
 `define AXI_LINE(name) AXI_BUS #(.AXI_ADDR_WIDTH(32), .AXI_DATA_WIDTH(32), .AXI_ID_WIDTH(4)) name()
@@ -130,9 +138,10 @@ wire cpu_interrupt;
 wire sd_dat_interrupt, sd_cmd_interrupt;
 wire usb_interrupt;
 wire cdbus_interrupt;
+wire i2c_interrupt;
 // Ethernet should be at lowest bit because the configuration in intc
 // (interrupt of emaclite is a pulse interrupt, not level) 
-wire [6:0] interrupts = {cdbus_interrupt, usb_interrupt, sd_dat_interrupt, sd_cmd_interrupt, uart_interrupt, spi_interrupt, eth_interrupt};
+wire [7:0] interrupts = {i2c_interrupt, cdbus_interrupt, usb_interrupt, sd_dat_interrupt, sd_cmd_interrupt, uart_interrupt, spi_interrupt, eth_interrupt};
 cpu_wrapper #(
     .C_ASIC_SRAM(C_ASIC_SRAM)
 ) cpu (
@@ -152,7 +161,7 @@ function automatic logic [3:0] periph_addr_sel(input logic [ 31 : 0 ] addr);
         select = 1;
     else if (addr[31:20]==12'h1fc || addr[31:16]==16'h1fe8) // SPI
         select = 5;
-    else if (addr[31:16]==16'h1fe4 || addr[31:16]==16'h1fe7) // APB
+    else if (addr[31:16]==16'h1fe4 || addr[31:16]==16'h1fe7 || addr[31:16] == 16'h1fe5) // APB
         select = 3; 
     else if (addr[31:16]==16'h1fd0) // conf
         select = 2;
@@ -447,7 +456,17 @@ axi2apb_misc #(.C_ASIC_SRAM(C_ASIC_SRAM)) APB_DEV
 .cdbus_int          (cdbus_interrupt),
 .cdbus_tx           (CDBUS_tx),
 .cdbus_rx           (CDBUS_rx),
-.cdbus_tx_en        (CDBUS_tx_en)
+.cdbus_tx_en        (CDBUS_tx_en),
+
+.i2cm_scl_i,
+.i2cm_scl_o,
+.i2cm_scl_t, 
+
+.i2cm_sda_i,
+.i2cm_sda_o,
+.i2cm_sda_t,
+
+.i2c_int(i2c_interrupt)
 );
 
     assign mem_axi_awid = mig_s.aw_id;
