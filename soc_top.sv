@@ -107,7 +107,10 @@ module soc_top #(
 
     input  i2cm_sda_i,
     output i2cm_sda_o,
-    output i2cm_sda_t
+    output i2cm_sda_t,
+
+    output cpu_aresetn,
+    output cpu_global_reset
 );
 
 `define AXI_LINE(name) AXI_BUS #(.AXI_ADDR_WIDTH(32), .AXI_DATA_WIDTH(32), .AXI_ID_WIDTH(4)) name()
@@ -152,7 +155,9 @@ cpu_wrapper #(
     .m0(cpu_m),
 
     .debug_output_mode(debug_output_mode),
-    .debug_output_data(debug_output_data)
+    .debug_output_data(debug_output_data),
+    .cpu_aresetn,
+    .cpu_global_reset
 );
 
 function automatic logic [3:0] periph_addr_sel(input logic [ 31 : 0 ] addr);

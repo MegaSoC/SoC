@@ -12,11 +12,12 @@ module cpu_wrapper #(
     AXI_BUS.Master m0,
 
     input [1:0]  debug_output_mode,
-    output [3:0] debug_output_data
+    output [3:0] debug_output_data,
+    output cpu_aresetn,
+    output cpu_global_reset
 );
 
 wire [1:0] int_cpu;
-wire cpu_aresetn;
 stolen_cdc_sync_rst cpu_rstgen(
     .dest_clk(cpu_clk),
     .dest_rst(cpu_aresetn),
@@ -197,6 +198,7 @@ mycpu_top #(.IMPLEMENT_LIKELY(1), .C_ASIC_SRAM(C_ASIC_SRAM)) cpu_mid (
   .aclk         (cpu_clk),
   .ext_int      ({4'b0, int_cpu}),  //232 only 5bit
   .aresetn      (cpu_aresetn    ),
+  .global_reset (cpu_global_reset),
  
   .arid         (cpu_arid[3:0] ),
   .araddr       (cpu_araddr    ),
