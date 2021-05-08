@@ -105,9 +105,7 @@ axi_ethernetlite #(
   .phy_mdc(mdc_0)
 );
 
-mii_to_rmii #(
-    .C_FIXED_SPEED(0)
-) converter (
+mii_to_rmii converter (
     .rst_n(phy_rstn),
     .ref_clk(rmii_ref_clk),
     
