@@ -85,7 +85,9 @@ module soc_top #(
     input           ULPI_nxt,
     
     output          CDBUS_tx,
+    output          CDBUS_tx_t,
     output          CDBUS_tx_en,
+    output          CDBUS_tx_en_t,
     input           CDBUS_rx,
 
     output   [31:0] dat_cfg_to_ctrl,
@@ -460,8 +462,10 @@ axi2apb_misc #(.C_ASIC_SRAM(C_ASIC_SRAM)) APB_DEV
 
 .cdbus_int          (cdbus_interrupt),
 .cdbus_tx           (CDBUS_tx),
+.cdbus_tx_t         (CDBUS_tx_t),
 .cdbus_rx           (CDBUS_rx),
 .cdbus_tx_en        (CDBUS_tx_en),
+.cdbus_tx_en_t      (CDBUS_tx_en_t),
 
 .i2cm_scl_i,
 .i2cm_scl_o,
