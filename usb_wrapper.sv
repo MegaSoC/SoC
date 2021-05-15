@@ -188,6 +188,7 @@ ahblite_axi_bridge mstconv (
 wire [7:0] ulpi_output_en;
 assign ULPI_data_t = ~ulpi_output_en;
 
+(* keep_hierarchy = "yes" *)
 DWC_otg ctrl(
     .hclk(aclk),
     .hreset_n(aresetn),
